@@ -1,23 +1,18 @@
-from flask import Flask, request, jsonify
+from flask import request
 
-app = Flask(__name__)
-user_db = {}  # Temporary in-memory storage
-
-@app.route("/webhook", methods=["POST"])
-def telegram_webhook():
+@app.route("/register", methods=["POST"])
+def register_user():
     data = request.json
-    if 'message' in data:
-        username = data["message"]["from"].get("username", "unknown_user")
-        chat_id = data["message"]["chat"]["id"]
-        user_db[username] = chat_id
-        print(f"Saved {username} -> {chat_id}")
-    return "OK"
+    username = data.get("username")
+    chat_id = data.get("chat_id")
 
-@app.route("/get_chat_id/<username>", methods=["GET"])
-def get_chat_id(username):
-    chat_id = user_db.get(username)
-    return jsonify({"chat_id": chat_id}) if chat_id else ("User not found", 404)
+    if not username or not chat_id:
+        return jsonify({"error": "Missing username or chat_id"}), 400
 
-@app.route("/", methods=["GET"])
-def home():
-    return "Bot is alive!"
+    chat_id_map[username] = chat_id
+
+    # Optional: Save to file if you're using JSON storage
+    with open("chat_ids.json", "w") as f:
+        json.dump(chat_id_map, f)
+
+    return jsonify({"message": "User registered successfully."})
