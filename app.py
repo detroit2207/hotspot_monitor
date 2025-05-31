@@ -58,7 +58,8 @@ def run_bot():
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("start", start, pass_args=True))
     updater.start_polling()
-    updater.idle()
+    # No updater.idle()
+
 
 # Run bot in a separate thread
 threading.Thread(target=run_bot).start()
