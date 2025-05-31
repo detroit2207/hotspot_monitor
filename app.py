@@ -1,16 +1,27 @@
 from flask import Flask, jsonify
 from telegram.ext import Updater, CommandHandler
 import threading
-import requests
+import json
+import os
 
 app = Flask(__name__)
-
-# Store username -> chat_id
-user_data = {}
-
-# Your bot token
 BOT_TOKEN = "7715743565:AAH_dKW6dOMWdGb_7t4_INxDT-LToZt6gsQ"
 
+DATA_FILE = "users.json"
+
+# --- Load from file ---
+def load_users():
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+# --- Save to file ---
+def save_users(data):
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f)
+
+user_data = load_users()
 
 def start(update, context):
     try:
@@ -18,18 +29,17 @@ def start(update, context):
             username = context.args[0]
             chat_id = update.effective_chat.id
             user_data[username] = chat_id
-            update.message.reply_text(f"✅ Registered as {username}!\nYou’ll now get alerts.")
+            save_users(user_data)
+            update.message.reply_text(f"✅ Registered as {username}!")
         else:
             update.message.reply_text("❌ Username missing! Use /start your_username")
     except Exception as e:
         update.message.reply_text(f"Error: {e}")
 
-def get_chat_id(username):
-    return user_data.get(username)
-
 @app.route("/get_chat_id/<username>", methods=["GET"])
 def handle_get_chat_id(username):
-    chat_id = get_chat_id(username)
+    user_data = load_users()  # Always read latest from file
+    chat_id = user_data.get(username)
     if chat_id:
         return jsonify({"chat_id": chat_id})
     else:
@@ -42,7 +52,7 @@ def run_bot():
     updater.start_polling()
     updater.idle()
 
-# Run bot in separate thread
+# Run bot in a separate thread
 threading.Thread(target=run_bot).start()
 
 if __name__ == "__main__":
