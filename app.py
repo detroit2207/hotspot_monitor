@@ -1,17 +1,27 @@
-from flask import request
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+import requests
 
-def register_user():
-    data = request.json
-    username = data.get("username")
-    chat_id = data.get("chat_id")
+BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+BACKEND_REGISTER_URL = "https://hotspot-monitor.onrender.com/register"
 
-    if not username or not chat_id:
-        return jsonify({"error": "Missing username or chat_id"}), 400
+def start(update, context):
+    username = update.message.text.split(" ")[1] if len(update.message.text.split()) > 1 else None
+    if not username:
+        update.message.reply_text("Please restart the bot with your username like this:\n/start yourusername")
+        return
 
-    chat_id_map[username] = chat_id
+    chat_id = update.message.chat_id
+    data = {
+        "username": username,
+        "chat_id": str(chat_id)
+    }
+    try:
+        requests.post(BACKEND_REGISTER_URL, json=data)
+        update.message.reply_text("✅ Registered successfully!\nYou’ll now receive notifications.")
+    except:
+        update.message.reply_text("❌ Failed to register. Try again later.")
 
-    # Optional: Save to file if you're using JSON storage
-    with open("chat_ids.json", "w") as f:
-        json.dump(chat_id_map, f)
-
-    return jsonify({"message": "User registered successfully."})
+updater = Updater(BOT_TOKEN, use_context=True)
+dp = updater.dispatcher
+dp.add_handler(CommandHandler("start", start))
+updater.start_polling()
