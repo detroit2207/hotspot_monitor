@@ -1,6 +1,5 @@
 from flask import request
 
-@app.route("/register", methods=["POST"])
 def register_user():
     data = request.json
     username = data.get("username")
