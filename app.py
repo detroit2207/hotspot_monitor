@@ -1,7 +1,8 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import requests
 
-BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+BOT_TOKEN = "7715743565:AAH_dKW6dOMWdGb_7t4_INxDT-LToZt6gsQ"
+
 BACKEND_REGISTER_URL = "https://hotspot-monitor.onrender.com/register"
 
 def start(update, context):
