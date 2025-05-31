@@ -26,11 +26,18 @@ user_data = load_users()
 def start(update, context):
     try:
         if context.args:
-            username = context.args[0]
+            username = context.args[0].strip().lower()  # normalize username
             chat_id = update.effective_chat.id
-            user_data[username] = chat_id
-            save_users(user_data)
-            update.message.reply_text(f"✅ Registered as {username}!")
+
+            # Reload user_data fresh to avoid race conditions
+            current_users = load_users()
+
+            if username in current_users:
+                update.message.reply_text(f"❌ Username '{username}' is already taken. Please choose another.")
+            else:
+                current_users[username] = chat_id
+                save_users(current_users)
+                update.message.reply_text(f"✅ Registered as {username}!")
         else:
             update.message.reply_text("❌ Username missing! Use /start your_username")
     except Exception as e:
@@ -38,6 +45,7 @@ def start(update, context):
 
 @app.route("/get_chat_id/<username>", methods=["GET"])
 def handle_get_chat_id(username):
+    username = username.strip().lower()  # normalize username lookup
     user_data = load_users()  # Always read latest from file
     chat_id = user_data.get(username)
     if chat_id:
